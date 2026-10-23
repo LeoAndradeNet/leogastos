@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>Minhas Notinhas</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f1f5f9; color:#0f172a; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:0 16px 40px; }
+    .container { max-width:640px; margin:0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:24px 0 18px; }
+    h1 { font-size:clamp(25px,6vw,34px); margin:0; letter-spacing:-.8px; }
+    h2 { font-size:21px; margin:0 0 16px; }
+    p { line-height:1.5; }
+    .subtitulo { margin:6px 0 0; color:#475569; font-size:15px; }
+    .card { background:white; border:1px solid #e2e8f0; border-radius:20px; padding:20px; margin:0 0 18px; box-shadow:0 4px 18px rgba(15,23,42,.04); }
+    button, input, select { font:inherit; }
+    button { cursor:pointer; border:0; border-radius:14px; font-weight:700; }
+    button:disabled, select:disabled { cursor:not-allowed; opacity:.55; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
+    .principal { background:#2563eb; color:white; font-size:21px; padding:19px 20px; min-height:62px; width:100%; }
+    .principal:hover:not(:disabled) { background:#1d4ed8; }
+    .secundario { background:#e2e8f0; color:#0f172a; padding:16px 19px; min-height:56px; font-size:17px; }
+    .pequeno { background:transparent; border:1px solid #cbd5e1; padding:10px 12px; font-size:13px; color:#334155; white-space:nowrap; }
+    .campo { display:block; font-size:17px; font-weight:650; margin:18px 0 8px; }
+    input, select { width:100%; min-height:58px; padding:12px 14px; border:1px solid #94a3b8; border-radius:12px; font-size:17px; background:#fff; color:#0f172a; }
+    .acoes-link { display:flex; gap:10px; }
+    .acoes-link input { flex:1; min-width:0; }
+    .acoes-link button { flex:0 0 auto; }
+    #leitor { width:100%; overflow:hidden; border-radius:16px; background:#020617; margin-top:16px; }
+    #leitor video { object-fit:cover; }
+    #areaCamera { margin-top:12px; }
+    #pararCamera { margin-top:10px; width:100%; }
+    .ajuda { color:#64748b; font-size:14px; margin:10px 0 0; }
+    .status { margin:16px 0; padding:15px; font-size:16px; line-height:1.5; border-radius:14px; border:1px solid #cbd5e1; background:#e2e8f0; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .status.erro { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+    .status.sucesso { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+    .status.aviso { background:#fffbeb; border-color:#fde68a; color:#92400e; }
+    .info { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .info .loja { grid-column:1/-1; }
+    .rotulo { font-size:13px; color:#64748b; margin-bottom:4px; }
+    .valor { font-size:18px; font-weight:750; overflow-wrap:anywhere; }
+    .valor.total { font-size:28px; }
+    .item { padding:14px 0; border-top:1px solid #e2e8f0; }
+    .item:first-child { border-top:0; }
+    .item-nome { font-size:17px; font-weight:650; margin-bottom:6px; overflow-wrap:anywhere; }
+    .item-detalhe { font-size:15px; display:flex; justify-content:space-between; gap:10px; color:#475569; }
+    .item-total { color:#0f172a; font-weight:750; white-space:nowrap; }
+    #categoria { margin-top:8px; }
+    [hidden] { display:none !important; }
+    dialog { border:0; border-radius:20px; padding:24px; max-width:min(92vw,420px); width:100%; box-shadow:0 20px 80px #0004; }
+    dialog::backdrop { background:#0f172ab3; }
+    dialog h2 { margin-bottom:8px; }
+    .dialog-acoes { display:flex; gap:10px; margin-top:18px; }
+    .dialog-acoes button { flex:1; }
+    .rodape { color:#64748b; text-align:center; font-size:13px; }
+    @media (max-width:390px) { .acoes-link { flex-direction:column; } .acoes-link button { width:100%; } header { align-items:flex-start; } }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div><h1>Minhas Notinhas</h1><p class="subtitulo">Controle simples das suas compras</p></div>
+      <button class="pequeno" id="trocarSenha" type="button">Trocar senha</button>
+    </header>
+
+    <section class="card" aria-label="Lançar nota fiscal">
+      <button id="lerNota" class="principal" type="button">📷 Ler notinha</button>
+      <div id="areaCamera" hidden>
+        <div id="leitor"></div>
+        <p class="ajuda">Aponte a câmera para o QR Code. Enquadre o código no quadrado.</p>
+        <button id="pararCamera" class="secundario" type="button">Fechar câmera</button>
+      </div>
+      <label class="campo" for="linkNota">Ou cole o link da nota</label>
+      <div class="acoes-link">
+        <input id="linkNota" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://www.nfce.fazenda.sp.gov.br/...">
+        <button id="lancar" class="secundario" type="button">Lançar</button>
+      </div>
+      <p class="ajuda">Aceita NFC-e da Fazenda de São Paulo.</p>
+    </section>
+
+    <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+    <section id="resultado" class="card" hidden aria-label="Resultado da compra">
+      <h2>Compra</h2>
+      <div class="info">
+        <div class="loja"><div class="rotulo">Loja</div><div id="loja" class="valor"></div></div>
+        <div><div class="rotulo">Data</div><div id="data" class="valor"></div></div>
+        <div><div class="rotulo">Total</div><div id="total" class="valor total"></div></div>
+      </div>
+      <label for="categoria" class="campo">Categoria da loja</label>
+      <select id="categoria">
+        <option value="Mercado">Mercado</option>
+        <option value="Farmácia">Farmácia</option>
+        <option value="Combustível">Combustível</option>
+        <option value="Restaurante">Restaurante</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <p id="categoriaAjuda" class="ajuda">Alterar a categoria também atualiza as compras anteriores da mesma loja.</p>
+      <h2 style="margin-top:26px">Itens da compra</h2>
+      <div id="itens"></div>
+    </section>
+
+    <p class="rodape">O link e a senha são enviados ao seu Google Apps Script.</p>
+  </main>
+
+  <dialog id="janelaSenha" aria-labelledby="tituloSenha">
+    <h2 id="tituloSenha">Senha de acesso</h2>
+    <p class="subtitulo">Informe a senha configurada no Apps Script. Ela será guardada neste navegador.</p>
+    <form id="formSenha">
+      <label class="campo" for="entradaSenha">Senha</label>
+      <input id="entradaSenha" type="password" autocomplete="off" required minlength="1">
+      <div class="dialog-acoes">
+        <button id="cancelarSenha" class="secundario" type="button">Cancelar</button>
+        <button class="principal" type="submit">Salvar senha</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    // =====================================================
+    // CONFIGURAÇÃO: COLE A URL DO SEU APP SCRIPT AQUI
+    // Exemplo: https://script.google.com/macros/s/AKfycb.../exec
+    // =====================================================
+    const URL_DO_MOTOR = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+
+    const CHAVE_SENHA = 'minhas_notinhas_senha';
+    const $ = (id) => document.getElementById(id);
+    const formatoMoeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatoNumero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
+
+    let senha = localStorage.getItem(CHAVE_SENHA) || '';
+    let leitorQR = null;
+    let cameraLigada = false;
+    let iniciandoCamera = false;
+    let encerrandoCamera = false;
+    let qrProcessado = false;
+    let enviando = false;
+    let lojaAtual = '';
+    let categoriaAnterior = 'Outros';
+
+    function status(mensagem, tipo = '') {
+      const el = $('status');
+      el.textContent = mensagem;
+      el.className = 'status' + (tipo ? ' ' + tipo : '');
+      el.hidden = false;
+    }
+
+    function limparStatus() { $('status').hidden = true; }
+
+    function validarConfiguracao() {
+      if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/.test(URL_DO_MOTOR.trim())) {
+        throw new Error('Configure a constante URL_DO_MOTOR com a URL /exec da implantação do Google Apps Script.');
+      }
+      if (!senha) {
+        abrirSenha();
+        throw new Error('Digite e salve sua senha para continuar.');
+      }
+    }
+
+    function abrirSenha() {
+      $('entradaSenha').value = senha;
+      if (!$('janelaSenha').open) $('janelaSenha').showModal();
+      $('entradaSenha').focus();
+    }
+
+    $('formSenha').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const novaSenha = $('entradaSenha').value;
+      if (!novaSenha) return;
+      senha = novaSenha;
+      try { localStorage.setItem(CHAVE_SENHA, senha); }
+      catch (_) { status('Não foi possível guardar a senha neste navegador. Ela funcionará apenas até você fechar a página.', 'aviso'); }
+      $('janelaSenha').close();
+    });
+
+    $('cancelarSenha').addEventListener('click', () => $('janelaSenha').close());
+    $('trocarSenha').addEventListener('click', abrirSenha);
+
+    // IMPORTANTE: text/plain evita um preflight comum, mas NÃO elimina CORS.
+    // A implantação do Apps Script precisa permitir que o navegador leia a resposta.
+    async function chamarMotor(payload) {
+      validarConfiguracao();
+      let resposta;
+      try {
+        resposta = await fetch(URL_DO_MOTOR.trim(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ senha, ...payload }),
+          redirect: 'follow'
+        });
+      } catch (erro) {
+        throw new Error('Não foi possível se comunicar com o Apps Script. Verifique a internet, a URL /exec, as permissões da implantação e se o navegador bloqueou a resposta por CORS. O uso de text/plain não resolve CORS sozinho.');
+      }
+
+      let dados;
+      try {
+        const texto = await resposta.text();
+        dados = JSON.parse(texto);
+      } catch (_) {
+        throw new Error('O motor não retornou um JSON legível. Confira a implantação do Apps Script e eventuais redirecionamentos ou bloqueios de CORS.');
+      }
+
+      if (!resposta.ok) throw new Error(dados.aviso || 'Falha HTTP ' + resposta.status + ' ao consultar o motor.');
+      if (!dados || typeof dados !== 'object') throw new Error('A resposta do motor não tem o formato esperado.');
+      return dados;
+    }
+
+    function deixarOcupado(ocupado) {
+      enviando = ocupado;
+      $('lancar').disabled = ocupado;
+      $('lerNota').disabled = ocupado || iniciandoCamera || cameraLigada;
+      $('categoria').disabled = ocupado;
+    }
+
+    function validarLink(link) {
+      const texto = String(link || '').trim().replace(/&amp;/gi, '&');
+      let url;
+      try { url = new URL(texto); }
+      catch (_) { throw new Error('O link da notinha não é válido.'); }
+      if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== 'www.nfce.fazenda.sp.gov.br') {
+        throw new Error('Use um link de NFC-e da Fazenda de São Paulo.');
+      }
+      if (!/^\d{44}(?:\||%7C|$)/i.test(url.searchParams.get('p') || '')) {
+        throw new Error('Não encontrei a chave de acesso de 44 dígitos no link.');
+      }
+      return texto;
+    }
+
+    function mostrarResultado(dados) {
+      $('resultado').hidden = false;
+      lojaAtual = String(dados.loja || '');
+      $('loja').textContent = lojaAtual || 'Não informada';
+      $('data').textContent = String(dados.data || 'Não informada');
+      $('total').textContent = formatoMoeda.format(Number(dados.total) || 0);
+
+      const valorCategoria = String(dados.categoria || 'Outros');
+      const opcoes = Array.from($('categoria').options).map(o => o.value);
+      if (!opcoes.includes(valorCategoria)) {
+        const opt = document.createElement('option');
+        opt.value = valorCategoria;
+        opt.textContent = valorCategoria;
+        $('categoria').add(opt);
+      }
+      $('categoria').value = valorCategoria;
+      categoriaAnterior = valorCategoria;
+
+      const itens = $('itens');
+      itens.replaceChildren();
+      if (!Array.isArray(dados.itens) || dados.itens.length === 0) {
+        const vazio = document.createElement('p');
+        vazio.className = 'ajuda';
+        vazio.textContent = 'Nenhum item foi retornado.';
+        itens.appendChild(vazio);
+        return;
+      }
+
+      for (const item of dados.itens) {
+        const bloco = document.createElement('div');
+        bloco.className = 'item';
+        const nome = document.createElement('div');
+        nome.className = 'item-nome';
+        nome.textContent = String(item.descricao || 'Produto sem descrição');
+        const detalhe = document.createElement('div');
+        detalhe.className = 'item-detalhe';
+        const qtd = document.createElement('span');
+        qtd.textContent = `${formatoNumero.format(Number(item.quantidade) || 0)} ${String(item.unidade || '')} × ${formatoMoeda.format(Number(item.precoUnitario) || 0)}`;
+        const total = document.createElement('span');
+        total.className = 'item-total';
+        total.textContent = formatoMoeda.format(Number(item.total) || 0);
+        detalhe.append(qtd, total);
+        bloco.append(nome, detalhe);
+        itens.appendChild(bloco);
+      }
+    }
+
+    async function lancarLink(link) {
+      if (enviando) return;
+      try {
+        const validado = validarLink(link);
+        deixarOcupado(true);
+        $('resultado').hidden = true;
+        status('Buscando a nota...');
+        const dados = await chamarMotor({ acao: 'lancar', link: validado, loja: '', categoria: '' });
+        if (dados.ok) {
+          mostrarResultado(dados);
+          status(dados.aviso || 'Notinha lançada com sucesso!', /já foi lançada/i.test(dados.aviso || '') ? 'aviso' : 'sucesso');
+        } else {
+          status(dados.aviso || 'Não foi possível lançar a notinha.', 'erro');
+          if (/senha inválida/i.test(dados.aviso || '')) abrirSenha();
+        }
+      } catch (erro) {
+        status(erro.message || 'Erro inesperado ao lançar a nota.', 'erro');
+      } finally {
+        deixarOcupado(false);
+      }
+    }
+
+    $('lancar').addEventListener('click', () => lancarLink($('linkNota').value));
+    $('linkNota').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') { event.preventDefault(); lancarLink($('linkNota').value); }
+    });
+
+    $('categoria').addEventListener('change', async () => {
+      const nova = $('categoria').value;
+      if (!lojaAtual || enviando) return;
+      $('categoria').disabled = true;
+      try {
+        status('Salvando categoria...');
+        const resposta = await chamarMotor({ acao: 'categoria', loja: lojaAtual, categoria: nova, link: '' });
+        if (!resposta.ok) throw new Error(resposta.aviso || 'Não foi possível alterar a categoria.');
+        categoriaAnterior = nova;
+        status(resposta.aviso || 'Categoria salva!', 'sucesso');
+      } catch (erro) {
+        $('categoria').value = categoriaAnterior;
+        status(erro.message || 'Falha ao salvar a categoria.', 'erro');
+        if (/senha inválida/i.test(erro.message || '')) abrirSenha();
+      } finally {
+        $('categoria').disabled = false;
+      }
+    });
+
+    async function pararCamera() {
+      if (encerrandoCamera) return;
+      encerrandoCamera = true;
+      try {
+        if (leitorQR && (cameraLigada || iniciandoCamera)) {
+          try { await leitorQR.stop(); }
+          catch (erro) { console.warn('Não foi possível parar a câmera:', erro); }
+        }
+        if (leitorQR) {
+          try { leitorQR.clear(); } catch (_) {}
+        }
+      } finally {
+        cameraLigada = false;
+        iniciandoCamera = false;
+        leitorQR = null;
+        encerrandoCamera = false;
+        $('areaCamera').hidden = true;
+        $('lerNota').disabled = enviando;
+      }
+    }
+
+    $('pararCamera').addEventListener('click', pararCamera);
+
+    $('lerNota').addEventListener('click', async () => {
+      if (iniciandoCamera || cameraLigada || enviando || encerrandoCamera) return;
+      try {
+        if (typeof Html5Qrcode === 'undefined') throw new Error('Não foi possível carregar a biblioteca de leitura de QR Code. Verifique sua conexão com a internet.');
+        if (!window.isSecureContext) throw new Error('Para abrir a câmera, acesse a página via HTTPS. O GitHub Pages fornece HTTPS.');
+        qrProcessado = false;
+        iniciandoCamera = true;
+        $('lerNota').disabled = true;
+        $('areaCamera').hidden = false;
+        limparStatus();
+        leitorQR = new Html5Qrcode('leitor', { verbose: false });
+        const dimensao = Math.min(260, Math.max(170, window.innerWidth - 110));
+        await leitorQR.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: dimensao, height: dimensao }, aspectRatio: 1.0 },
+          async (texto) => {
+            if (qrProcessado) return;
+            try { validarLink(texto); }
+            catch (_) { return; } // Ignora QR Codes que não sejam NFC-e suportadas.
+            qrProcessado = true;
+            $('linkNota').value = texto;
+            await pararCamera();
+            await lancarLink(texto);
+          },
+          () => {} // Leituras intermediárias sem QR Code são normais.
+        );
+        cameraLigada = true;
+        iniciandoCamera = false;
+        $('lerNota').disabled = true;
+      } catch (erro) {
+        await pararCamera();
+        status('Não foi possível abrir a câmera. Confira a permissão da câmera no navegador e tente novamente. Detalhe: ' + (erro.message || String(erro)), 'erro');
+      }
+    });
+
+    if (!senha) abrirSenha();
+  </script>
+</body>
+</html>
